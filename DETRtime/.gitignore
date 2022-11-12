@@ -5,7 +5,7 @@
 /runs/*
 data/*
 run.sh
-log/*
+logs/*
 tables/*
 archive_runs/*
 images/*

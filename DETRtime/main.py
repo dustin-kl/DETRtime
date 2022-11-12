@@ -27,15 +27,15 @@ def get_args_parser():
     parser.add_argument('--weight_decay', default=1e-4, type=float)
     parser.add_argument('--epochs', default=300, type=int)
     parser.add_argument('--lr_drop', default=50, type=int)
-    parser.add_argument('--clip_max_norm', default=0.1, type=float,
-                        help='gradient clipping max norm')
+    # parser.add_argument('--clip_max_norm', default=0.1, type=float,
+    #                     help='gradient clipping max norm')
 
     # Model parameters
     # parser.add_argument('--frozen_weights', type=str, default=None,
     #                    help="Path to the pretrained model. If set, only the mask head will be trained")
 
     # * Backbone
-    parser.add_argument('--backbone', default='pcnn', type=str,
+    parser.add_argument('--backbone', default='inception_time', type=str,
                         help="Name of the convolutional backbone to use")
     parser.add_argument('--kernel_size', default=64, type=int)
     parser.add_argument('--nb_filters', default=16, type=int)
@@ -57,9 +57,9 @@ def get_args_parser():
                         help="Number of encoding layers in the transformer")
     parser.add_argument('--dec_layers', default=6, type=int,
                         help="Number of decoding layers in the transformer")
-    parser.add_argument('--dim_feedforward', default=2048, type=int,
+    parser.add_argument('--dim_feedforward', default=1024, type=int,
                         help="Intermediate size of the feedforward layers in the transformer blocks")
-    parser.add_argument('--hidden_dim', default=256, type=int,
+    parser.add_argument('--hidden_dim', default=128, type=int,
                         help="Size of the embeddings (dimension of the transformer)")
     parser.add_argument('--dropout', default=0.1, type=float,
                         help="Dropout applied in the transformer")
@@ -100,13 +100,14 @@ def get_args_parser():
     parser.add_argument('--timestamps', default=500, type=int)
     parser.add_argument('--timestamps_output', default=500, type=int)
     # parser.add_argument('--dataset_file', default='coco')
-    parser.add_argument('--data_path', type=str)
+    parser.add_argument('--data_path', default='/itet-stor/klebed/net_scratch/segmentation/ICML_dots_min_segmentation_minseq_4000_margin_2_amp_thresh_150/tensors', type=str)
     parser.add_argument('--scaler', type=str, choices=['Standard', 'MaxMin'])
     # parser.add_argument('--coco_panoptic_path', type=str)
     # parser.add_argument('--remove_difficult', action='store_true')
 
-    parser.add_argument('--output_dir', default='', required=True,
+    parser.add_argument('--output_dir', default='./runs/"$modelname" &', required=False,
                         help='path where to save, empty for no saving')
+    # TODO make device to Cuda (but need to install correct environment before)
     parser.add_argument('--device', default='cuda',
                         help='device to use for training / testing')
     parser.add_argument('--seed', default=42, type=int)
@@ -115,7 +116,7 @@ def get_args_parser():
                         help='start epoch')
     parser.add_argument('--eval', action='store_true')
     parser.add_argument('--num_workers', default=2, type=int)
-    parser.add_argument('--apply_labels', default=False, type=bool)
+    parser.add_argument('--apply_labels', default=True, type=bool)
     # distributed training parameters
     # parser.add_argument('--world_size', default=1, type=int,
     #                    help='number of distributed processes')
@@ -177,7 +178,7 @@ def main(args):
         logging.info("Using train_30")
         scaler, data_loader_train = create_dataloader(
             data_dir=args.data_path,
-            file=f'train_no_neg1.npz',
+            file=f'train_short.npz',
             validation=False,
             batch_size=args.batch_size,
             workers=args.num_workers,
@@ -193,7 +194,7 @@ def main(args):
         logging.info("Loading validation data.")
         _, data_loader_val = create_dataloader(
                                 data_dir=args.data_path, 
-                                file=f'val_no_neg1.npz',
+                                file=f'val.npz',
                                 validation=True,
                                 batch_size=args.batch_size,
                                 workers=args.num_workers,
@@ -252,7 +253,7 @@ def main(args):
         logging.info(f"Test stats:")
         logging.info(test_stats)
         logging.info(f"Finished logging.")
-        return
+        
 
     logging.info(f"Start training.")
     logging.info(f"-------------------------------------------------------------------------------")
@@ -264,11 +265,11 @@ def main(args):
         # Train one epoch
         logging.info(f"Training...")
         train_stats = train_one_epoch(
-            model, criterion, data_loader_train, optimizer, device, epoch, args.timestamps_output, args.clip_max_norm
-        )
+            model, criterion, data_loader_train, optimizer, device, epoch, args.timestamps_output
+            )
         # HARDCODED LR DROP !
-        for i in range(20):
-            lr_scheduler.step()
+        # for i in range(20):
+        #     lr_scheduler.step()
 
         # save model every epoch
         if args.output_dir:

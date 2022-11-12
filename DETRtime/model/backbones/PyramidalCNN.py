@@ -14,7 +14,7 @@ class PyramidalCNN(ConvNet):
     specific depth, where for each depth the number of filters is increased.
     """
 
-    def __init__(self, input_shape, output_shape, kernel_size=16, nb_filters=16, use_residual=False, depth=6, maxpools = maxpools):
+    def __init__(self, input_shape, output_shape, kernel_size=16, nb_filters=16, use_residual=False, depth=6):
         """
         nb_features: specifies number of channels before the output layer 
         """

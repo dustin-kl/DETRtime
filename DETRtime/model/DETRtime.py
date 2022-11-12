@@ -34,7 +34,7 @@ class DETRtime(nn.Module):
         self.class_embed = nn.Linear(hidden_dim, num_classes + 1)
 
         #outputs two values for bounding box, 3 layers
-        self.bbox_embed = MLP(hidden_dim, hidden_dim, 2, 3)
+        self.bbox_embed = MLP(hidden_dim, hidden_dim, 1, 3)
         self.query_embed = nn.Embedding(num_queries, hidden_dim)
         #CNN --> Transformer projector
         self.input_proj = nn.Conv1d(backbone.num_channels, hidden_dim, 1)
@@ -112,7 +112,7 @@ class SetCriterion(nn.Module):
             #empty_weight = torch.tensor([0.61, 0.83, 6.59, self.eos_coef]) #calculated, but found to be worse
             #empty_weight = torch.tensor([0.61, 1.4, 6.59, self.eos_coef]) #adjusted saccades higher movie
             logging.info("Using adjusted class weights for Zuco")
-            empty_weight = torch.tensor([0.64, 1.7, 9.4, self.eos_coef])#zuco
+            empty_weight = torch.tensor([0.64, 1.7, 9.4, self.eos_coef]) #zuco
             logging.info(f'Weights: {empty_weight}')
         elif self.num_classes == 5: #hardcoded class weights for the sleep data set
             logging.info("Using adjusted class weights (events) for Sleep")
@@ -180,12 +180,12 @@ class SetCriterion(nn.Module):
         losses = {}
         losses['loss_bbox'] = loss_bbox.sum() / num_boxes
 
-        loss_giou = 1 - torch.diag(generalized_time_iou(
-            box_cxw_to_xlxh(src_boxes),
-            box_cxw_to_xlxh(target_boxes)
-        ))
+        # loss_giou = 1 - torch.diag(generalized_time_iou(
+        #     box_cxw_to_xlxh(src_boxes),
+        #     box_cxw_to_xlxh(target_boxes)
+        # ))
 
-        losses['loss_giou'] = loss_giou.sum() / num_boxes
+        # losses['loss_giou'] = loss_giou.sum() / num_boxes
         return losses
 
 
